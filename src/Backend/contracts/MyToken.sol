@@ -16,30 +16,32 @@ contract MyToken is ERC721, IMyToken, AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-
     function singleMint(address to) external override onlyRole(MINTER_ROLE) {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _mint(to, tokenId);
     }
 
-     function safeTransferFrom(
+    function safeTransferFrom(
         address from,
         address to,
         uint256 tokenId
     ) public virtual override {
         safeTransferFrom(from, to, tokenId, "");
     }
-     
-     /**
+
+    /**
      * @dev See {IERC721-transferFrom}.
      */
-     function transferFrom(
+    function transferFrom(
         address from,
         address to,
         uint256 tokenId
     ) public virtual override {
-    require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner nor approved");
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "ERC721: caller is not token owner nor approved"
+        );
 
         _transfer(from, to, tokenId);
     }
@@ -50,21 +52,22 @@ contract MyToken is ERC721, IMyToken, AccessControl {
         uint256 tokenId,
         bytes memory data
     ) public virtual override {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner nor approved");
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "ERC721: caller is not token owner nor approved"
+        );
         _safeTransfer(from, to, tokenId, data);
     }
-    
 
     // The following functions are overrides required by Solidity.
 
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        virtual 
+        virtual
         override(ERC721, AccessControl)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
     }
-
 }

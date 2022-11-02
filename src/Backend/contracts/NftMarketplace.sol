@@ -13,12 +13,10 @@ error AlreadyListed(address nftAddress, uint256 tokenId);
 error NoProceeds();
 error NotOwner();
 
-
 // Error thrown for isNotOwner modifier
 // error IsNotOwner()
 
 contract NftMarketplace is ReentrancyGuard {
-
     using Counters for Counters.Counter;
     Counters.Counter private _nftsSold;
     Counters.Counter private _nftCount;
@@ -33,22 +31,20 @@ contract NftMarketplace is ReentrancyGuard {
         bool sold;
     }
 
-
     struct Listing {
         uint256 price;
         address seller;
         bool active;
     }
 
-    struct  NFT {
-      address nftContract;
-      uint256 tokenId;
-      address payable seller;
-      address payable owner;
-      uint256 price;
-      bool listed;
-  }
-    
+    struct NFT {
+        address nftContract;
+        uint256 tokenId;
+        address payable seller;
+        address payable owner;
+        uint256 price;
+        bool listed;
+    }
 
     event ItemListed(
         address indexed seller,
@@ -79,7 +75,7 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 expires
     );
 
-     event NFTUnlisted(
+    event NFTUnlisted(
         address unlistSender,
         address nftContract,
         uint256 tokenId
@@ -98,8 +94,6 @@ contract NftMarketplace is ReentrancyGuard {
     mapping(address => uint256) private s_proceeds;
     mapping(uint256 => NFT) private _idToNFT;
     mapping(uint => Item) public items;
-
-    
 
     modifier notListed(
         address nftAddress,
@@ -134,10 +128,10 @@ contract NftMarketplace is ReentrancyGuard {
         _;
     }
 
-     // IsNotOwner Modifier - Nft Owner can't buy his/her NFT
+    // IsNotOwner Modifier - Nft Owner can't buy his/her NFT
     // Modifies buyItem function
     // Owner should only list, cancel listing or update listing
-     modifier isNotOwner(
+    modifier isNotOwner(
         address nftAddress,
         uint256 tokenId,
         address spender
@@ -148,7 +142,7 @@ contract NftMarketplace is ReentrancyGuard {
             revert NotOwner();
         }
         _;
-    } 
+    }
 
     /////////////////////
     // Main Functions //
@@ -165,27 +159,30 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 price
     )
         external
-
         notListed(nftAddress, tokenId, msg.sender)
-        //isOwner(nftAddress, tokenId, msg.sender)
-    {   itemCount ++;
-        require(price > 0,"Price Must Be Above Zero");
-        IERC721 nft = IERC721(nftAddress);       
-        require(nft.getApproved(tokenId)!= address(this),"Not Approved For Market Place");
+    //isOwner(nftAddress, tokenId, msg.sender)
+    {
+        itemCount++;
+        require(price > 0, "Price Must Be Above Zero");
+        IERC721 nft = IERC721(nftAddress);
+        require(
+            nft.getApproved(tokenId) != address(this),
+            "Not Approved For Market Place"
+        );
         IERC721(nftAddress).transferFrom(msg.sender, address(this), tokenId);
-        s_listings[nftAddress][tokenId] = Listing(price, msg.sender,true);
-        
+        s_listings[nftAddress][tokenId] = Listing(price, msg.sender, true);
+
         emit ItemListed(msg.sender, nftAddress, tokenId, price);
-        
-      _idToNFT[tokenId] = NFT(
-      nftAddress,
-      tokenId, 
-      payable(msg.sender),
-      payable(address(this)),
-      price,
-      true
-    );
-     items[itemCount] = Item (
+
+        _idToNFT[tokenId] = NFT(
+            nftAddress,
+            tokenId,
+            payable(msg.sender),
+            payable(address(this)),
+            price,
+            true
+        );
+        items[itemCount] = Item(
             itemCount,
             nftAddress,
             tokenId,
@@ -194,8 +191,7 @@ contract NftMarketplace is ReentrancyGuard {
             false
         );
     }
-    
-    
+
     /*
      * @notice Method to  Rent NFT
      * @param nftContract Address of NFT contract
@@ -212,12 +208,11 @@ contract NftMarketplace is ReentrancyGuard {
         external
         isOwner(nftAddress, tokenId, msg.sender)
         isListed(nftAddress, tokenId)
-    {   
+    {
         s_listings[nftAddress][tokenId].active = false;
         IERC721(nftAddress).transferFrom(address(this), msg.sender, tokenId);
         emit ItemCanceled(msg.sender, nftAddress, tokenId);
     }
-
 
     /*
      * @notice Method for buying listing
@@ -227,11 +222,11 @@ contract NftMarketplace is ReentrancyGuard {
      * @param nftAddress Address of NFT contract
      * @param tokenId Token ID of NFT
      */
-     function purchaseItem(uint _itemId) external payable nonReentrant {
+    function purchaseItem(uint _itemId) external payable nonReentrant {
         Item storage item = items[_itemId];
         require(_itemId > 0 && _itemId <= itemCount, "item doesn't exist");
         require(!item.sold, "item already sold");
-        require(msg.sender != item.seller,"Owner of NFT Cant Buy Their Nft");
+        require(msg.sender != item.seller, "Owner of NFT Cant Buy Their Nft");
         // pay seller and feeAccount
         item.seller.transfer(item.price);
         // update item to sold
@@ -245,9 +240,5 @@ contract NftMarketplace is ReentrancyGuard {
             item.tokenId,
             item.price
         );
-        
     }
-
-    
-
 }
